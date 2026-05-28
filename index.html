@@ -9,24 +9,22 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <main class="app-shell">
-    <section class="screen is-active" data-screen="home">
-      <div class="hero">
-        <p class="eyebrow">Goofish Sniper</p>
+  <div class="desktop-bg" aria-hidden="true"></div>
+  <main class="miniapp" id="app">
+    <section class="page active" data-page="home">
+      <header class="page-head">
+        <p class="brand">Goofish Sniper</p>
         <h1>Настройка поиска</h1>
-        <div class="hint-line">
-          <span class="glass-icon" data-icon="bolt"></span>
-          <span>Объявления приходят прямо в чат Telegram-бота</span>
-        </div>
-      </div>
+        <div class="notice"><span data-icon="bolt"></span><p>Объявления приходят прямо в чат Telegram-бота</p></div>
+      </header>
 
-      <form class="search-form" id="searchForm">
-        <label class="field full is-focused">
+      <form class="form" id="searchForm">
+        <label class="field focused">
           <span>Что ищем</span>
           <input name="query" value="iPhone 15 Pro 256GB" autocomplete="off" />
         </label>
 
-        <div class="field-grid">
+        <div class="field-row">
           <label class="field">
             <span>Мин. цена</span>
             <input name="minPrice" type="number" inputmode="numeric" placeholder="от ₽" />
@@ -39,134 +37,88 @@
 
         <label class="field select-field">
           <span>Категория</span>
-          <select name="category" id="categorySelect">
+          <select id="categorySelect" name="category">
             <option value="">Выберите категорию</option>
-            <option value="Телефоны">Телефоны</option>
-            <option value="Одежда">Одежда</option>
-            <option value="Обувь">Обувь</option>
-            <option value="Фото">Фото</option>
-            <option value="Электроника">Электроника</option>
+            <option>Телефоны</option>
+            <option>Электроника</option>
+            <option>Одежда</option>
+            <option>Обувь</option>
+            <option>Фото</option>
+            <option>Коллекционное</option>
           </select>
         </label>
 
         <label class="field select-field">
           <span>Размер</span>
-          <select name="size" id="sizeSelect">
+          <select id="sizeSelect" name="size">
             <option value="">Укажите размер, если нужно</option>
-            <option value="XS">XS</option>
-            <option value="S">S</option>
-            <option value="M">M</option>
-            <option value="L">L</option>
-            <option value="XL">XL</option>
-            <option value="39">39</option>
-            <option value="40">40</option>
-            <option value="41">41</option>
-            <option value="42">42</option>
-            <option value="43">43</option>
+            <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option>
+            <option>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option>
           </select>
         </label>
 
-        <label class="field full">
+        <label class="field">
           <span>Ключевые слова</span>
           <input name="keywords" placeholder="Введите через запятую" autocomplete="off" />
         </label>
 
-        <button class="primary-btn" type="submit">
-          <span class="btn-icon" data-icon="bolt"></span>
-          <span>Сохранить и запустить</span>
-        </button>
+        <button class="main-btn" type="submit"><span data-icon="bolt"></span><b>Сохранить и запустить</b></button>
       </form>
     </section>
 
-    <section class="screen" data-screen="plans">
-      <div class="hero compact">
+    <section class="page" data-page="plans">
+      <header class="page-head short">
         <h1>Тарифы</h1>
-        <div class="hint-line">
-          <span class="glass-icon" data-icon="bolt"></span>
-          <span>Подписка для получения объявлений в Telegram-боте</span>
-        </div>
-      </div>
-
+        <div class="notice"><span data-icon="bolt"></span><p>Подписка для получения объявлений в Telegram-боте</p></div>
+      </header>
       <div class="plans" id="plansList">
-        <button class="plan-card is-selected" data-plan="week">
-          <span class="plan-icon" data-icon="calendar"></span>
-          <span class="plan-copy"><b>Неделя</b><small>7 дней</small></span>
-          <strong>$2</strong>
-          <span class="radio-dot"></span>
-        </button>
-        <button class="plan-card" data-plan="month">
-          <span class="plan-icon" data-icon="calendar"></span>
-          <span class="plan-copy"><b>Месяц</b><small>30 дней</small></span>
-          <strong>$8</strong>
-          <span class="radio-dot"></span>
-        </button>
-        <button class="plan-card" data-plan="three_months">
-          <span class="plan-icon" data-icon="calendar"></span>
-          <span class="plan-copy"><b>3 месяца</b><small>90 дней</small></span>
-          <strong>$20</strong>
-          <span class="radio-dot"></span>
-        </button>
-        <button class="plan-card" data-plan="year">
-          <span class="plan-icon" data-icon="calendar"></span>
-          <span class="plan-copy"><b>Год</b><small>365 дней</small></span>
-          <strong>$100</strong>
-          <span class="radio-dot"></span>
-        </button>
-        <button class="plan-card" data-plan="lifetime">
-          <span class="plan-icon" data-icon="infinity"></span>
-          <span class="plan-copy"><b>Навсегда</b><small>пожизненный доступ</small></span>
-          <strong>$140</strong>
-          <span class="radio-dot"></span>
-        </button>
+        <button class="plan selected" data-plan="week"><span data-icon="calendar"></span><strong>Неделя<small>7 дней</small></strong><b>$2</b><i></i></button>
+        <button class="plan" data-plan="month"><span data-icon="calendar"></span><strong>Месяц<small>30 дней</small></strong><b>$8</b><i></i></button>
+        <button class="plan" data-plan="three_months"><span data-icon="calendar"></span><strong>3 месяца<small>90 дней</small></strong><b>$20</b><i></i></button>
+        <button class="plan" data-plan="year"><span data-icon="calendar"></span><strong>Год<small>365 дней</small></strong><b>$100</b><i></i></button>
+        <button class="plan" data-plan="lifetime"><span data-icon="infinity"></span><strong>Навсегда<small>пожизненный доступ</small></strong><b>$140</b><i></i></button>
       </div>
-
-      <p class="stars-note"><span data-icon="star"></span> Оплата через Telegram Stars или на карту в боте</p>
-      <button class="primary-btn" id="buyInBot"><span data-icon="bolt"></span> Купить в боте</button>
-      <button class="ghost-btn" id="checkStatus">Проверить статус подписки</button>
-      <p class="muted-note">Все объявления отправляются в чат Telegram-бота</p>
+      <p class="pay-note"><span data-icon="star"></span>Оплата через Telegram Stars или на карту в боте</p>
+      <button class="main-btn" id="buyInBot" type="button"><span data-icon="bolt"></span><b>Купить в боте</b></button>
+      <button class="soft-btn" id="checkStatus" type="button">Проверить статус подписки</button>
+      <p class="small-note">Все объявления отправляются в чат Telegram-бота</p>
     </section>
 
-    <section class="screen" data-screen="profile">
-      <div class="hero compact"><h1>Профиль</h1></div>
-
-      <div class="profile-card glass-card">
+    <section class="page" data-page="profile">
+      <header class="page-head short"><h1>Профиль</h1></header>
+      <div class="profile-card glass">
         <div class="avatar"><span data-icon="user"></span></div>
         <div>
           <h2 id="profileName">@username</h2>
           <p id="profileId">Telegram ID: 123456789</p>
-          <p class="status-line"><span data-icon="badge"></span><span id="profileStatus">Подписка не активна</span></p>
+          <p class="sub-status"><span data-icon="badge"></span><em id="profileStatus">Подписка не активна</em></p>
         </div>
       </div>
-
-      <h3 class="section-title">Активные поиски</h3>
-      <div class="list-card" id="activeSearches">
-        <div class="empty-state">Активных поисков пока нет</div>
-      </div>
-
-      <button class="row-btn" data-tab-target="faq"><span data-icon="help"></span> FAQ <i></i></button>
-      <button class="row-btn" id="openBotFromProfile"><span data-icon="plane"></span> Открыть бота <i></i></button>
+      <h3>Активные поиски</h3>
+      <div class="list" id="activeSearches"><p class="empty">Активных поисков пока нет</p></div>
+      <button class="row-link" data-tab-jump="faq"><span data-icon="help"></span><b>FAQ</b><i></i></button>
+      <button class="row-link" id="openBotFromProfile"><span data-icon="plane"></span><b>Открыть бота</b><i></i></button>
     </section>
 
-    <section class="screen" data-screen="faq">
-      <div class="hero compact"><h1>FAQ</h1></div>
-      <div class="list-card faq-list">
-        <button>Куда приходят объявления?<i></i></button>
-        <button>Как купить подписку?<i></i></button>
-        <button>Как остановить поиск?<i></i></button>
-        <button>Что делать, если бот молчит?<i></i></button>
-        <button>Как связаться с админом?<i></i></button>
+    <section class="page" data-page="faq">
+      <header class="page-head short"><h1>FAQ</h1></header>
+      <div class="faq-list glass">
+        <button><b>Куда приходят объявления?</b><i></i></button>
+        <button><b>Как купить подписку?</b><i></i></button>
+        <button><b>Как остановить поиск?</b><i></i></button>
+        <button><b>Что делать, если бот молчит?</b><i></i></button>
+        <button><b>Как связаться с админом?</b><i></i></button>
       </div>
-      <button class="row-btn" id="contactAdmin"><span data-icon="chat"></span> Написать админу <i></i></button>
+      <button class="row-link" id="contactAdmin"><span data-icon="chat"></span><b>Написать админу</b><i></i></button>
     </section>
   </main>
 
-  <nav class="liquid-tabbar" aria-label="Навигация">
-    <button class="tab is-active" data-tab="home"><span data-icon="home"></span><b>Главная</b></button>
-    <button class="tab" data-tab="plans"><span data-icon="diamond"></span><b>Тарифы</b></button>
-    <button class="tab" data-tab="profile"><span data-icon="user"></span><b>Профиль</b></button>
-    <button class="tab" data-tab="faq"><span data-icon="help"></span><b>FAQ</b></button>
+  <nav class="glass-nav" aria-label="Навигация">
+    <button class="nav-item active" data-tab="home"><span data-icon="home"></span><b>Главная</b></button>
+    <button class="nav-item" data-tab="plans"><span data-icon="diamond"></span><b>Тарифы</b></button>
+    <button class="nav-item" data-tab="profile"><span data-icon="user"></span><b>Профиль</b></button>
+    <button class="nav-item" data-tab="faq"><span data-icon="help"></span><b>FAQ</b></button>
   </nav>
-
   <div class="toast" id="toast">Поиск сохранен</div>
   <script src="./app.js"></script>
 </body>

@@ -1,27 +1,3 @@
-// For GitHub Pages: set this to your deployed backend URL later.
-const API_URL = localStorage.getItem('API_URL') || 'http://localhost:3000';
-const DEV_TELEGRAM_ID = localStorage.getItem('DEV_TELEGRAM_ID') || '123456789';
-const ADMIN_USERNAME = localStorage.getItem('ADMIN_USERNAME') || 'taypoov';
-
-const icons = {
-  bolt: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13.3 2 4 13h6.6L9.7 22 20 9.8h-6.8L13.3 2Z"/></svg>',
-  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M7 3v4M17 3v4M4.5 9h15M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg>',
-  infinity: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M8.5 9.5c2.5 0 4.5 5 7 5a3 3 0 1 0 0-6c-2.5 0-4.5 5-7 5a3 3 0 1 1 0-6Z"/></svg>',
-  star: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>',
-  home: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M3.5 10.8 12 4l8.5 6.8V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1v-9.2Z"/></svg>',
-  diamond: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.1"><path d="M6.5 4h11L22 9l-10 11L2 9l4.5-5Z"/><path d="M2 9h20M8 4l4 16 4-16"/></svg>',
-  user: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
-  help: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.5 2.5 0 0 1 4.7 1.2c0 2.2-2.4 2.2-2.4 4"/><path d="M12 18h.01"/></svg>',
-  plane: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.1"><path d="M21 3 10.5 13.5M21 3l-6.5 18-4-7.5L3 9.5 21 3Z"/></svg>',
-  chat: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.1"><path d="M4 12a8 8 0 1 1 4 6.9L4 20l1.1-3.8A8 8 0 0 1 4 12Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
-  badge: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M10.9 2.7a2 2 0 0 1 2.2 0l1.4.9 1.7.2a2 2 0 0 1 1.7 1.5l.4 1.7 1.1 1.3a2 2 0 0 1 .2 2.2l-.8 1.5.1 1.7a2 2 0 0 1-1.1 1.9l-1.6.7-1 1.4a2 2 0 0 1-2.1.8l-1.6-.4-1.6.4a2 2 0 0 1-2.1-.8l-1-1.4-1.6-.7a2 2 0 0 1-1.1-1.9l.1-1.7-.8-1.5a2 2 0 0 1 .2-2.2l1.1-1.3.4-1.7a2 2 0 0 1 1.7-1.5l1.7-.2 1.4-.9Zm4.5 7.3-4.1 4.1-1.8-1.8-1.2 1.2 3 3 5.3-5.3-1.2-1.2Z"/></svg>',
-  phone: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="8" y="2.8" width="8" height="18.4" rx="2"/><path d="M11 18h2"/></svg>',
-  shoe: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 14.5c3.8-.5 5.7-2.7 6.6-6.5l4.7 5.3 3.5.8c1.5.3 2.6 1.6 2.7 3.1H5.8A2.3 2.3 0 0 1 4 14.5Z"/><path d="M9 13.5h11"/></svg>',
-  camera: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 7h3l1.4-2h5.2L16 7h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>'
-};
-
-document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = icons[el.dataset.icon] || ''; });
-
 const tg = window.Telegram?.WebApp;
 try {
   tg?.ready();
@@ -30,121 +6,160 @@ try {
   tg?.setBackgroundColor?.('#fbfbfc');
 } catch {}
 
-let currentPlan = 'week';
-let me = null;
+const icons = {
+  bolt: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13.1 2.6 4.4 13.2c-.4.5-.05 1.3.6 1.3h5.1l-1.2 6.4c-.14.75.8 1.19 1.3.6l8.8-10.7c.4-.5.05-1.3-.6-1.3h-5.1l1.1-6.4c.14-.76-.82-1.18-1.3-.5Z"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 10.7 8.5-7 8.5 7"/><path d="M5.6 9.7v10.2h12.8V9.7"/><path d="M10 20v-5.8h4V20"/></svg>',
+  diamond: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linejoin="round"><path d="M4 8.2 7.3 4h9.4L20 8.2 12 20 4 8.2Z"/><path d="M4 8.2h16M8 4l4 16 4-16"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.15" stroke-linecap="round"><circle cx="12" cy="7.6" r="3.8"/><path d="M4.8 20.2c1.3-4.05 4-6 7.2-6s5.9 1.95 7.2 6"/></svg>',
+  help: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.7 2.7 0 0 1 2.7-2.3c1.7 0 3 1.1 3 2.7 0 1.9-1.8 2.4-2.6 3.5-.35.48-.45.95-.45 1.65"/><path d="M12 18h.01"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/></svg>',
+  infinity: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7.4 15.2c-2 0-3.4-1.4-3.4-3.2s1.4-3.2 3.4-3.2c3.9 0 5.3 6.4 9.2 6.4 2 0 3.4-1.4 3.4-3.2s-1.4-3.2-3.4-3.2c-3.9 0-5.3 6.4-9.2 6.4Z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.65 6.2.82-4.55 4.28 1.15 6.15L12 16.92 6.5 19.9l1.15-6.15L3.1 9.47l6.2-.82L12 3Z"/></svg>',
+  badge: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M10.1 2.8a3 3 0 0 1 3.8 0l1 .82c.38.31.85.5 1.34.55l1.29.13a3 3 0 0 1 2.69 2.69l.13 1.29c.05.49.24.96.55 1.34l.82 1a3 3 0 0 1 0 3.8l-.82 1a3 3 0 0 0-.55 1.34l-.13 1.29a3 3 0 0 1-2.69 2.69l-1.29.13a3 3 0 0 0-1.34.55l-1 .82a3 3 0 0 1-3.8 0l-1-.82a3 3 0 0 0-1.34-.55l-1.29-.13a3 3 0 0 1-2.69-2.69l-.13-1.29a3 3 0 0 0-.55-1.34l-.82-1a3 3 0 0 1 0-3.8l.82-1c.31-.38.5-.85.55-1.34l.13-1.29a3 3 0 0 1 2.69-2.69l1.29-.13a3 3 0 0 0 1.34-.55l1-.82Zm5 7.38a1 1 0 0 0-1.42-1.42l-2.7 2.7-.66-.66a1 1 0 1 0-1.42 1.42l1.37 1.36a1 1 0 0 0 1.41 0l3.41-3.4Z"/></svg>',
+  plane: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4 3.8 11.2c-.85.36-.8 1.58.08 1.86l6.28 2.02 2.03 6.28c.28.88 1.5.93 1.86.08L21 4Z"/><path d="m10.2 15.1 4.9-4.9"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.2C4 7.8 7.55 5 12 5s8 2.8 8 7.2-3.55 7.2-8 7.2c-.9 0-1.75-.12-2.54-.36L5 20l1.14-3.45A6.95 6.95 0 0 1 4 12.2Z"/><path d="M8.8 12h.01M12 12h.01M15.2 12h.01"/></svg>'
+};
 
-function headers() {
-  const h = { 'Content-Type': 'application/json' };
-  if (tg?.initData) h['x-telegram-init-data'] = tg.initData;
-  else h['x-dev-telegram-id'] = DEV_TELEGRAM_ID;
-  return h;
-}
-
-async function api(path, options = {}) {
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || 'API_ERROR');
-  return data;
-}
-
-function showToast(text) {
-  const toast = document.getElementById('toast');
-  toast.textContent = text;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2400);
-}
-
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('is-active', t.dataset.tab === name));
-  document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('is-active', s.dataset.screen === name));
-}
-
-document.querySelectorAll('[data-tab]').forEach((btn) => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
-document.querySelectorAll('[data-tab-target]').forEach((btn) => btn.addEventListener('click', () => switchTab(btn.dataset.tabTarget)));
-
-document.querySelectorAll('select').forEach((select) => {
-  const sync = () => select.classList.toggle('has-value', Boolean(select.value));
-  select.addEventListener('change', sync);
-  sync();
+document.querySelectorAll('[data-icon]').forEach(el => {
+  const name = el.dataset.icon;
+  if (icons[name]) el.innerHTML = icons[name];
 });
 
-document.querySelectorAll('.plan-card').forEach((card) => {
-  card.addEventListener('click', () => {
-    currentPlan = card.dataset.plan;
-    document.querySelectorAll('.plan-card').forEach((c) => c.classList.toggle('is-selected', c === card));
+const API_URL = window.GOOFISH_API_URL || localStorage.getItem('GOOFISH_API_URL') || '';
+const BOT_USERNAME = window.GOOFISH_BOT_USERNAME || localStorage.getItem('GOOFISH_BOT_USERNAME') || '';
+const ADMIN_USERNAME = window.GOOFISH_ADMIN_USERNAME || 'taypoov';
+const initData = tg?.initData || '';
+
+const pages = [...document.querySelectorAll('.page')];
+const tabs = [...document.querySelectorAll('.nav-item')];
+const toast = document.querySelector('#toast');
+const activeSearches = document.querySelector('#activeSearches');
+let selectedPlan = 'week';
+let searches = JSON.parse(localStorage.getItem('gofish_searches') || '[]');
+
+function showToast(text) {
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+function switchPage(name) {
+  pages.forEach(p => p.classList.toggle('active', p.dataset.page === name));
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  try { tg?.HapticFeedback?.selectionChanged(); } catch {}
+}
+
+tabs.forEach(tab => tab.addEventListener('click', () => switchPage(tab.dataset.tab)));
+document.querySelectorAll('[data-tab-jump]').forEach(btn => btn.addEventListener('click', () => switchPage(btn.dataset.tabJump)));
+
+function markSelectValue(select) {
+  select.classList.toggle('has-value', Boolean(select.value));
+}
+document.querySelectorAll('select').forEach(select => {
+  markSelectValue(select);
+  select.addEventListener('change', () => markSelectValue(select));
+});
+
+document.querySelectorAll('.plan').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectedPlan = btn.dataset.plan;
+    document.querySelectorAll('.plan').forEach(p => p.classList.toggle('selected', p === btn));
+    try { tg?.HapticFeedback?.selectionChanged(); } catch {}
   });
 });
 
-function openBot() {
-  if (tg?.openTelegramLink) {
-    const botUsername = localStorage.getItem('BOT_USERNAME');
-    if (botUsername) return tg.openTelegramLink(`https://t.me/${botUsername.replace('@', '')}`);
-  }
-  showToast('Откройте бота в Telegram');
-}
-
-document.getElementById('buyInBot').addEventListener('click', openBot);
-document.getElementById('openBotFromProfile').addEventListener('click', openBot);
-document.getElementById('contactAdmin').addEventListener('click', () => {
-  if (ADMIN_USERNAME && tg?.openTelegramLink) tg.openTelegramLink(`https://t.me/${ADMIN_USERNAME.replace('@', '')}`);
-  else showToast('Напишите админу в боте');
-});
-document.getElementById('checkStatus').addEventListener('click', async () => {
-  await loadMe();
-  showToast(me?.subscription?.text || 'Статус обновлен');
-});
-
-document.getElementById('searchForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = new FormData(e.currentTarget);
-  const payload = Object.fromEntries(form.entries());
-  try {
-    await api('/api/searches', { method: 'POST', body: JSON.stringify(payload) });
-    showToast('Поиск сохранен и запущен');
-    await loadMe();
-    switchTab('profile');
-  } catch (err) {
-    if (String(err.message).includes('NO_ACTIVE_SUBSCRIPTION')) {
-      showToast('Нужна активная подписка');
-      switchTab('plans');
-    } else {
-      showToast('Не удалось сохранить поиск');
-    }
-  }
-});
-
-function renderSearches(searches = []) {
-  const box = document.getElementById('activeSearches');
+function renderSearches() {
   if (!searches.length) {
-    box.innerHTML = '<div class="empty-state">Активных поисков пока нет</div>';
+    activeSearches.innerHTML = '<p class="empty">Активных поисков пока нет</p>';
     return;
   }
-  const iconFor = (category) => category === 'Обувь' ? 'shoe' : category === 'Фото' ? 'camera' : 'phone';
-  box.innerHTML = searches.slice(0, 6).map((s) => `
-    <button class="search-row" data-search-id="${s.id}">
+  activeSearches.innerHTML = searches.slice(0, 5).map(item => `
+    <div class="search-row">
       <span class="search-dot"></span>
-      <span><b>${escapeHtml(s.query)}</b><small>${escapeHtml(s.category || 'Без категории')}</small></span>
-      <span class="search-status">${s.active ? 'Активен' : 'Пауза'}</span>
-      <i></i>
-    </button>
+      <span><b>${escapeHtml(item.query || 'Поиск')}</b><small>${escapeHtml(item.category || 'Без категории')}</small></span>
+      <span class="search-status">Активен</span>
+      <span class="chev"></span>
+    </div>
   `).join('');
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[ch]));
 }
+
+renderSearches();
+
+document.querySelector('#searchForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const payload = Object.fromEntries(form.entries());
+  const item = {
+    id: Date.now(),
+    query: payload.query || 'Новый поиск',
+    category: payload.category || 'Без категории',
+    size: payload.size || '',
+    minPrice: payload.minPrice || '',
+    maxPrice: payload.maxPrice || '',
+    keywords: payload.keywords || ''
+  };
+
+  searches.unshift(item);
+  searches = searches.slice(0, 8);
+  localStorage.setItem('gofish_searches', JSON.stringify(searches));
+  renderSearches();
+  showToast('Поиск сохранен');
+
+  if (API_URL) {
+    try {
+      await fetch(`${API_URL.replace(/\/$/, '')}/api/searches`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': initData
+        },
+        body: JSON.stringify(item)
+      });
+    } catch (error) {
+      console.warn('API save failed:', error);
+    }
+  }
+
+  try { tg?.HapticFeedback?.notificationOccurred('success'); } catch {}
+  setTimeout(() => switchPage('profile'), 650);
+});
+
+function openTelegramUser(username) {
+  const clean = String(username || '').replace('@', '');
+  if (!clean) return;
+  const url = `https://t.me/${clean}`;
+  if (tg?.openTelegramLink) tg.openTelegramLink(url);
+  else window.open(url, '_blank');
+}
+
+function openBot() {
+  if (BOT_USERNAME) openTelegramUser(BOT_USERNAME);
+  else showToast('Укажи username бота');
+}
+
+document.querySelector('#buyInBot')?.addEventListener('click', openBot);
+document.querySelector('#checkStatus')?.addEventListener('click', openBot);
+document.querySelector('#openBotFromProfile')?.addEventListener('click', openBot);
+document.querySelector('#contactAdmin')?.addEventListener('click', () => openTelegramUser(ADMIN_USERNAME));
 
 async function loadMe() {
+  if (!API_URL || !initData) return;
   try {
-    me = await api('/api/me');
-    const user = me.user || {};
-    document.getElementById('profileName').textContent = user.username ? `@${user.username}` : (user.firstName || '@username');
-    document.getElementById('profileId').textContent = `Telegram ID: ${user.telegramId || DEV_TELEGRAM_ID}`;
-    document.getElementById('profileStatus').textContent = me.subscription?.text ? `Подписка ${me.subscription.text}` : 'Подписка не активна';
-    renderSearches(me.searches || []);
-  } catch {
-    renderSearches([]);
-  }
+    const res = await fetch(`${API_URL.replace(/\/$/, '')}/api/me`, { headers: { 'X-Telegram-Init-Data': initData } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const user = data.user || data;
+    if (user.username) document.querySelector('#profileName').textContent = '@' + user.username.replace('@', '');
+    if (user.telegramId) document.querySelector('#profileId').textContent = 'Telegram ID: ' + user.telegramId;
+    if (user.subscriptionUntil) {
+      const d = new Date(user.subscriptionUntil);
+      document.querySelector('#profileStatus').textContent = 'Подписка активна до ' + d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+  } catch (e) { console.warn('me failed', e); }
 }
-
 loadMe();
