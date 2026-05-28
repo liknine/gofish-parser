@@ -20,7 +20,7 @@ const faq = [
   ['Как купить подписку?', 'Во вкладке «Тарифы» выберите период и оплатите Telegram Stars. Для оплаты картой нажмите «Оплатить на карту» — откроется личка админа.'],
   ['Как остановить поиск?', 'В профиле откройте активный поиск и отключите его. На MVP-этапе можно также написать админу, если нужно удалить поиск вручную.'],
   ['Что делать, если бот молчит?', 'Проверьте активна ли подписка и корректно ли настроен поиск. Если подписка активна, но объявлений нет, возможно, по фильтрам пока нет новых товаров.'],
-  ['Как связаться с админом?', 'Нажмите «Написать админу». Мы откроем @taypoov и скопируем текст сообщения, чтобы его можно было быстро отправить.'],
+  ['Как связаться с админом?', 'Нажмите «Написать админу». Telegram откроет диалог с @taypoov и попробует сразу подставить текст сообщения.'],
 ];
 
 let selectedPlan = 'lifetime';
@@ -86,7 +86,7 @@ function renderPlans() {
 function renderFAQ() {
   faqRoot.innerHTML = faq.map(([q, a], index) => `
     <button class="faq-item" data-faq="${index}"><span>${q}</span><i></i></button>
-    <div class="faq-answer">${a}</div>
+    <div class="faq-answer"><div>${a}</div></div>
   `).join('');
 
   faqRoot.querySelectorAll('.faq-item').forEach((button) => {
@@ -179,7 +179,7 @@ async function loadMe() {
   applyUser(tgUser || { id: '—', username: 'username' }, tgUser ? 'Статус подписки загружается...' : 'Локальный предпросмотр');
 
   if (!config.API_URL) {
-    const local = JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES') || '[]');
+    const local = JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V7') || '[]');
     renderSearches(local);
     return;
   }
@@ -224,10 +224,29 @@ async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
 }
 
+function adminMessage(planKey = '') {
+  const plan = plans.find((item) => item.key === planKey);
+  return plan
+    ? `Есть вопрос по боту. Хочу оплатить тариф ${plan.title} на карту.`
+    : 'Есть вопрос по боту.';
+}
+
+function openAdminChat(planKey = '') {
+  const text = adminMessage(planKey);
+  const tgUrl = `tg://resolve?domain=${config.ADMIN_USERNAME}&text=${encodeURIComponent(text)}`;
+  const webUrl = `https://t.me/${config.ADMIN_USERNAME}?text=${encodeURIComponent(text)}`;
+
+  haptic('medium');
+  // В Telegram/iOS deep-link обычно открывает диалог и подставляет текст.
+  // Если клиент не поддержит параметр text, просто откроется чат с админом.
+  try { window.location.href = tgUrl; } catch {}
+  setTimeout(() => {
+    if (document.visibilityState === 'visible') openTelegram(webUrl);
+  }, 650);
+}
+
 async function contactAdmin() {
-  await copyText(config.ADMIN_TEXT);
-  showToast('Текст скопирован. Открываю админа.');
-  setTimeout(() => openTelegram(`https://t.me/${config.ADMIN_USERNAME}`), 420);
+  openAdminChat();
 }
 
 async function payByStars() {
@@ -246,7 +265,7 @@ async function payByStars() {
 }
 
 async function payByCard() {
-  await contactAdmin();
+  openAdminChat(selectedPlan);
 }
 
 async function saveSearch(payload) {
@@ -265,8 +284,8 @@ async function saveSearch(payload) {
     active: true,
     createdAt: new Date().toISOString(),
   };
-  const local = [search, ...JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES') || '[]')];
-  localStorage.setItem('GOFISH_LOCAL_SEARCHES', JSON.stringify(local));
+  const local = [search, ...JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V7') || '[]')];
+  localStorage.setItem('GOFISH_LOCAL_SEARCHES_V7', JSON.stringify(local));
   renderSearches(local);
   return search;
 }
