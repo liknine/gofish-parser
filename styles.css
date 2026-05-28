@@ -301,3 +301,98 @@ h2 { margin: 38px 0 16px; font-size: 25px; line-height: 1.14; letter-spacing: -.
 .pay-actions + .ghost-btn {
   margin-top: 0;
 }
+
+/* v8 stability polish: smoother Telegram/iOS liquid dock, fixed FAQ layout */
+.dock {
+  min-height: 88px;
+  padding: 9px;
+  gap: 6px;
+  border-radius: 35px;
+  background:
+    radial-gradient(circle at 14% 92%, rgba(255,196,0,.12), transparent 30%),
+    radial-gradient(circle at 85% 10%, rgba(120,205,255,.12), transparent 34%),
+    radial-gradient(circle at 45% 105%, rgba(255,91,213,.09), transparent 40%),
+    rgba(255,255,255,.60);
+  box-shadow:
+    0 24px 78px rgba(0,0,0,.16),
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 -1px 0 rgba(255,196,0,.10);
+  backdrop-filter: blur(32px) saturate(1.52);
+  -webkit-backdrop-filter: blur(32px) saturate(1.52);
+}
+.dock::before {
+  opacity: .72;
+  transform: translateX(var(--dock-shift, 0));
+  transition: transform .72s cubic-bezier(.22,1,.36,1), opacity .45s ease;
+}
+.dock::after {
+  opacity: .72;
+  transition: opacity .38s ease;
+}
+.tab {
+  height: 68px;
+  border-radius: 999px;
+  will-change: transform, background, box-shadow, color;
+  transition:
+    transform .62s cubic-bezier(.22,1,.36,1),
+    color .42s cubic-bezier(.22,1,.36,1),
+    background .62s cubic-bezier(.22,1,.36,1),
+    box-shadow .62s cubic-bezier(.22,1,.36,1),
+    opacity .36s ease;
+}
+.tab.active {
+  min-width: 108px;
+  color: #e9ae00;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.56)),
+    radial-gradient(circle at 50% 0%, rgba(255,196,0,.16), transparent 58%);
+  box-shadow:
+    0 16px 42px rgba(0,0,0,.10),
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 0 -1px 0 rgba(255,196,0,.14);
+  transform: translateY(-4px) scale(1.015);
+}
+.tab.active svg {
+  animation: tabFloat .58s cubic-bezier(.22,1,.36,1);
+}
+@keyframes tabFloat {
+  0% { transform: translateY(3px) scale(.94); opacity:.74; }
+  62% { transform: translateY(-2px) scale(1.05); opacity:1; }
+  100% { transform: translateY(0) scale(1); opacity:1; }
+}
+
+.faq-card { overflow: hidden; }
+.faq-item {
+  position: relative;
+  z-index: 1;
+  min-height: 68px;
+  background: transparent;
+}
+.faq-answer {
+  display: block !important;
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 24px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: max-height .42s cubic-bezier(.22,1,.36,1), padding .42s cubic-bezier(.22,1,.36,1), opacity .32s ease, transform .42s cubic-bezier(.22,1,.36,1);
+}
+.faq-item.open + .faq-answer {
+  max-height: 180px;
+  padding: 0 24px 20px;
+  opacity: 1;
+  transform: translateY(0);
+  animation: none;
+}
+.faq-answer > div {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+}
+
+.action-row span:has(+ i) { min-width: 0; }

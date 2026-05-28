@@ -69,3 +69,16 @@ window.GOFISH_CONFIG = {
 ## Важно
 
 Локальный `http://localhost:3000` не будет доступен пользователям из Telegram WebView. Для полной работы Mini App + API backend нужно задеплоить на публичный HTTPS-домен.
+
+
+## Оплата Stars
+
+Кнопка `Оплатить Stars` открывает бота с параметром выбранного тарифа. Invoice создается в боте, а не внутри GitHub Pages. Это специально сделано проще и стабильнее для MVP.
+
+Если открываешь Mini App напрямую по ссылке GitHub Pages, впиши username бота в `index.html`:
+
+```js
+BOT_USERNAME: 'your_bot_username'
+```
+
+Если Mini App открывается из кнопки `/start` в боте, параметр `bot` будет подставлен автоматически.

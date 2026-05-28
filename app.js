@@ -48,6 +48,9 @@ function haptic(type = 'light') {
 function showScreen(name) {
   screens.forEach((screen) => screen.classList.toggle('active', screen.dataset.screen === name));
   tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.tab === name));
+  const order = ['home', 'plans', 'profile', 'faq'];
+  const index = Math.max(0, order.indexOf(name));
+  document.querySelector('.dock')?.style.setProperty('--dock-shift', `${(index - 1.5) * 38}px`);
   haptic('soft');
 }
 
@@ -179,7 +182,11 @@ async function loadMe() {
   applyUser(tgUser || { id: '—', username: 'username' }, tgUser ? 'Статус подписки загружается...' : 'Локальный предпросмотр');
 
   if (!config.API_URL) {
-    const local = JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V7') || '[]');
+    const local = JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]');
+    const previewText = tgUser
+      ? 'Статус смотрите в боте через /status'
+      : 'Локальный предпросмотр';
+    applyUser(tgUser || { id: '—', username: 'username' }, previewText);
     renderSearches(local);
     return;
   }
@@ -194,6 +201,7 @@ async function loadMe() {
     renderSearches(data.searches || []);
   } catch (err) {
     console.warn(err);
+    applyUser(tgUser || me || { id: '—', username: 'username' }, 'Не удалось загрузить статус. Проверьте /status в боте');
     showToast('Не удалось загрузить профиль. Проверьте API.');
   }
 }
@@ -284,8 +292,8 @@ async function saveSearch(payload) {
     active: true,
     createdAt: new Date().toISOString(),
   };
-  const local = [search, ...JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V7') || '[]')];
-  localStorage.setItem('GOFISH_LOCAL_SEARCHES_V7', JSON.stringify(local));
+  const local = [search, ...JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]')];
+  localStorage.setItem('GOFISH_LOCAL_SEARCHES_V8', JSON.stringify(local));
   renderSearches(local);
   return search;
 }
