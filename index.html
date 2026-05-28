@@ -8,8 +8,10 @@
   <link rel="stylesheet" href="./styles.css" />
   <script>
     window.GOFISH_CONFIG = {
-      // Можно оставить пустым: бот автоматически добавит api/bot в ссылку Mini App, если указать API_PUBLIC_URL/BOT_USERNAME в .env.
+      // API_URL можно оставить пустым, если backend еще не выложен.
       API_URL: '',
+      // Впиши username бота без @, если открываешь Mini App напрямую с GitHub Pages.
+      // Когда Mini App открывается из бота, bot-api сам добавит ?bot=... к ссылке.
       BOT_USERNAME: '',
       ADMIN_USERNAME: 'taypoov',
       ADMIN_TEXT: 'Есть вопрос по боту. Хочу оплатить подписку на карту.'

@@ -235,32 +235,14 @@ async function payByStars() {
   const plan = plans.find((item) => item.key === selectedPlan);
   if (!plan) return showToast('Выберите тариф.');
 
-  if (config.API_URL && tg?.initData) {
-    try {
-      const data = await apiFetch('/api/invoices', {
-        method: 'POST',
-        body: JSON.stringify({ plan: selectedPlan }),
-      });
-      if (tg?.openInvoice) {
-        tg.openInvoice(data.invoiceLink, (status) => {
-          if (status === 'paid') showToast('Оплата прошла. Подписка активируется.');
-          else if (status === 'cancelled') showToast('Оплата отменена.');
-          else showToast(`Статус оплаты: ${status}`);
-          loadMe();
-        });
-      } else {
-        window.open(data.invoiceLink, '_blank', 'noopener,noreferrer');
-      }
-      return;
-    } catch (err) {
-      console.warn(err);
-      showToast('Не удалось открыть Stars. Откройте оплату в боте.');
-    }
-  }
-
+  // ВАЖНО: Mini App не создает invoice сам.
+  // Кнопка всегда перекидывает в бота с выбранным тарифом,
+  // а уже бот показывает меню оплаты и отправляет Stars invoice.
   const link = botLink(`buy_${selectedPlan}`);
   if (link) return openTelegram(link);
-  showToast('Укажите BOT_USERNAME в config или откройте оплату в боте.');
+
+  await copyText(`/start buy_${selectedPlan}`);
+  showToast('Команда покупки скопирована. Откройте бота.');
 }
 
 async function payByCard() {
