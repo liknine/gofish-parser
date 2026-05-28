@@ -46,11 +46,18 @@ function haptic(type = 'light') {
 }
 
 function showScreen(name) {
-  screens.forEach((screen) => screen.classList.toggle('active', screen.dataset.screen === name));
+  const current = document.querySelector('.screen.active')?.dataset.screen;
+  if (current === name) return;
+
+  screens.forEach((screen) => {
+    const active = screen.dataset.screen === name;
+    screen.classList.toggle('active', active);
+  });
+
   tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.tab === name));
   const order = ['home', 'plans', 'profile', 'faq'];
   const index = Math.max(0, order.indexOf(name));
-  document.querySelector('.dock')?.style.setProperty('--dock-shift', `${(index - 1.5) * 38}px`);
+  document.querySelector('.dock')?.style.setProperty('--dock-shift', `${index * 25}%`);
   haptic('soft');
 }
 
@@ -88,13 +95,19 @@ function renderPlans() {
 
 function renderFAQ() {
   faqRoot.innerHTML = faq.map(([q, a], index) => `
-    <button class="faq-item" data-faq="${index}"><span>${q}</span><i></i></button>
-    <div class="faq-answer"><div>${a}</div></div>
+    <div class="faq-row" data-faq="${index}">
+      <button class="faq-item" type="button"><span>${q}</span><i></i></button>
+      <div class="faq-answer"><div>${a}</div></div>
+    </div>
   `).join('');
 
-  faqRoot.querySelectorAll('.faq-item').forEach((button) => {
-    button.addEventListener('click', () => {
-      button.classList.toggle('open');
+  faqRoot.querySelectorAll('.faq-row').forEach((row) => {
+    row.querySelector('.faq-item').addEventListener('click', () => {
+      const wasOpen = row.classList.contains('open');
+      faqRoot.querySelectorAll('.faq-row.open').forEach((item) => {
+        if (item !== row) item.classList.remove('open');
+      });
+      row.classList.toggle('open', !wasOpen);
       haptic('light');
     });
   });
@@ -118,6 +131,30 @@ function displayNameFromTelegram(user) {
 
 function getTelegramUser() {
   return tg?.initDataUnsafe?.user || null;
+}
+
+function subscriptionTextFromUrl() {
+  const lifetime = urlParams.get('lifetime') === '1';
+  const until = urlParams.get('sub_until');
+  if (lifetime) return 'Подписка активна навсегда';
+  if (until) {
+    const date = new Date(until);
+    if (!Number.isNaN(date.getTime()) && date.getTime() > Date.now()) {
+      return `Подписка активна до ${date.toLocaleDateString('ru-RU')}`;
+    }
+  }
+  const status = urlParams.get('sub');
+  if (status === 'active') return 'Подписка активна';
+  if (status === 'inactive') return 'Подписка не активна';
+  return '';
+}
+
+function userFromUrl() {
+  const id = urlParams.get('uid') || '';
+  const username = urlParams.get('username') || '';
+  const first_name = urlParams.get('first_name') || '';
+  if (!id && !username && !first_name) return null;
+  return { id, username, first_name };
 }
 
 function applyUser(user, subscriptionText = 'Подписка не активна') {
@@ -179,14 +216,14 @@ async function apiFetch(path, options = {}) {
 
 async function loadMe() {
   const tgUser = getTelegramUser();
-  applyUser(tgUser || { id: '—', username: 'username' }, tgUser ? 'Статус подписки загружается...' : 'Локальный предпросмотр');
+  const urlUser = userFromUrl();
+  const initialUser = tgUser || urlUser || { id: '—', username: 'username' };
+  const urlSubscription = subscriptionTextFromUrl();
+  applyUser(initialUser, urlSubscription || (tgUser ? 'Статус подписки загружается...' : 'Локальный предпросмотр'));
 
   if (!config.API_URL) {
-    const local = JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]');
-    const previewText = tgUser
-      ? 'Статус смотрите в боте через /status'
-      : 'Локальный предпросмотр';
-    applyUser(tgUser || { id: '—', username: 'username' }, previewText);
+    const local = JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]');
+    applyUser(initialUser, urlSubscription || 'Статус можно проверить в боте через /status');
     renderSearches(local);
     return;
   }
@@ -201,8 +238,8 @@ async function loadMe() {
     renderSearches(data.searches || []);
   } catch (err) {
     console.warn(err);
-    applyUser(tgUser || me || { id: '—', username: 'username' }, 'Не удалось загрузить статус. Проверьте /status в боте');
-    showToast('Не удалось загрузить профиль. Проверьте API.');
+    applyUser(tgUser || urlUser || me || { id: '—', username: 'username' }, urlSubscription || 'Статус можно проверить в боте через /status');
+    showToast('API недоступен. Статус взят из кнопки бота.');
   }
 }
 
