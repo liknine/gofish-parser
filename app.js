@@ -57,7 +57,9 @@ function showScreen(name) {
   tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.tab === name));
   const order = ['home', 'plans', 'profile', 'faq'];
   const index = Math.max(0, order.indexOf(name));
-  document.querySelector('.dock')?.style.setProperty('--dock-shift', `${index * 25}%`);
+  const dock = document.querySelector('.dock');
+  dock?.style.setProperty('--dock-index', String(index));
+  dock?.style.setProperty('--dock-shift', `${index * 100}%`);
   haptic('soft');
 }
 
@@ -149,6 +151,11 @@ function subscriptionTextFromUrl() {
   return '';
 }
 
+function isActiveSubscriptionText(text = '') {
+  const value = String(text).toLowerCase();
+  return value.includes('активна') && !value.includes('не активна') && !value.includes('проверить') && !value.includes('предпросмотр');
+}
+
 function userFromUrl() {
   const id = urlParams.get('uid') || '';
   const username = urlParams.get('username') || '';
@@ -166,6 +173,8 @@ function applyUser(user, subscriptionText = 'Подписка не активн�
   profileName.textContent = displayNameFromTelegram(user);
   profileId.textContent = `Telegram ID: ${user?.id || user?.telegramId || '—'}`;
   profileStatus.textContent = subscriptionText;
+  profileStatus.classList.toggle('is-active', isActiveSubscriptionText(subscriptionText));
+  profileStatus.classList.toggle('is-inactive', !isActiveSubscriptionText(subscriptionText));
 
   if (user?.photo_url || user?.photoUrl) {
     const src = user.photo_url || user.photoUrl;
