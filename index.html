@@ -33,7 +33,7 @@
         <form class="form" id="searchForm">
           <label class="field field-full active-field">
             <span>Что ищем</span>
-            <input id="queryInput" name="query" value="iPhone 15 Pro 256GB" placeholder="Например: iPhone 15 Pro" autocomplete="off" />
+            <input id="queryInput" name="query" placeholder="Например: iPhone 15 Pro 256GB" autocomplete="off" />
           </label>
 
           <div class="field-grid">
@@ -61,16 +61,10 @@
             <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5 12 14l5-4.5"/></svg>
           </label>
 
-          <div class="field size-field" id="sizeField">
+          <label class="field field-full">
             <span>Размер</span>
-            <div class="size-toolbar">
-              <small id="sizeHint">Выберите категорию, чтобы увидеть подходящие размеры</small>
-              <button class="size-clear" type="button" id="clearSizes">Очистить</button>
-            </div>
-            <div class="size-options" id="sizeOptions" aria-label="Размеры"></div>
-            <input id="sizeCustomInput" name="customSize" placeholder="Или введите размер вручную" autocomplete="off" />
-            <input id="sizeInput" name="size" type="hidden" />
-          </div>
+            <input id="sizeInput" name="size" placeholder="Например: 42, M, XL" autocomplete="off" />
+          </label>
 
           <label class="field field-full">
             <span>Ключевые слова</span>
@@ -134,7 +128,7 @@
         </div>
 
         <button class="action-row" data-go="faq"><svg viewBox="0 0 24 24"><path d="M9.5 9a2.8 2.8 0 1 1 4.7 2c-1.2 1.1-2.2 1.7-2.2 3.3M12 18h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><span>FAQ</span><i></i></button>
-        <button class="action-row" id="openBotRow"><svg viewBox="0 0 24 24"><path d="m21 3-7.5 18-4.2-7.8L2 9.5 21 3Z"/></svg><span>Open App</span><i></i></button>
+        <button class="action-row" id="openBotRow"><svg viewBox="0 0 24 24"><path d="m21 3-7.5 18-4.2-7.8L2 9.5 21 3Z"/></svg><span>Написать админу</span><i></i></button>
       </section>
     </main>
 
