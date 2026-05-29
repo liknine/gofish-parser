@@ -896,3 +896,79 @@ h2 { margin: 38px 0 16px; font-size: 25px; line-height: 1.14; letter-spacing: -.
 .faq-row.open .faq-item i {
   transform: rotate(135deg) !important;
 }
+
+
+/* v13: faster liquid navigation + edit/delete search actions */
+.screen {
+  transition:
+    opacity .42s cubic-bezier(.19, 1, .22, 1),
+    transform .46s cubic-bezier(.19, 1, .22, 1),
+    filter .46s cubic-bezier(.19, 1, .22, 1) !important;
+}
+.screen:not(.active) {
+  transform: translate3d(0, 10px, 0) scale(.99) !important;
+  filter: blur(5px) !important;
+}
+.dock {
+  gap: 5px !important;
+}
+.tab {
+  transition:
+    flex-grow .58s cubic-bezier(.2, 1.15, .22, 1),
+    flex-basis .58s cubic-bezier(.2, 1.15, .22, 1),
+    color .38s cubic-bezier(.2, 1, .22, 1),
+    transform .54s cubic-bezier(.2, 1.15, .22, 1),
+    background .54s cubic-bezier(.2, 1.15, .22, 1),
+    box-shadow .54s cubic-bezier(.2, 1.15, .22, 1),
+    opacity .32s ease !important;
+}
+.tab.active {
+  flex-grow: 1.66 !important;
+  transform: translate3d(0,-4px,0) scale(1.012) !important;
+}
+.tab svg,
+.tab span {
+  transition:
+    transform .52s cubic-bezier(.2, 1.15, .22, 1),
+    color .38s cubic-bezier(.2, 1, .22, 1),
+    opacity .32s ease !important;
+}
+.tab.active svg {
+  transform: translate3d(0,-2px,0) scale(1.035) !important;
+}
+.search-row {
+  grid-template-columns: 46px minmax(0, 1fr) auto !important;
+  min-height: 98px !important;
+  padding: 14px 6px !important;
+  row-gap: 10px !important;
+}
+.search-main { min-width: 0; }
+.search-main b,
+.search-main small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-actions {
+  grid-column: 2 / 4;
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: -2px;
+}
+.mini-action {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(255,255,255,.72);
+  color: #050505;
+  font-size: 13px;
+  font-weight: 760;
+  letter-spacing: -.02em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.86), 0 8px 22px rgba(0,0,0,.045);
+  transition: transform .2s cubic-bezier(.2,1,.22,1), background .2s ease, color .2s ease;
+}
+.mini-action:active { transform: scale(.96); }
+.mini-action.danger { color: #d23b3b; }
+@media (max-width: 370px) {
+  .search-row { grid-template-columns: 42px minmax(0, 1fr); }
+  .search-row em { grid-column: 2; justify-self: start; }
+  .search-actions { grid-column: 2; }
+}

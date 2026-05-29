@@ -26,6 +26,7 @@ const faq = [
 let selectedPlan = 'lifetime';
 let me = null;
 let searches = [];
+let editingSearchId = null;
 
 const screens = document.querySelectorAll('.screen');
 const tabs = document.querySelectorAll('.tab');
@@ -206,12 +207,23 @@ function renderSearches(list) {
 
   const icon = '<svg viewBox="0 0 24 24"><path d="M9 2.8h6a2 2 0 0 1 2 2v14.4a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2Z"/></svg>';
   searchesList.innerHTML = searches.map((search) => `
-    <button class="search-row" data-search-id="${search.id}">
+    <div class="search-row" data-search-id="${search.id}">
       <span class="round-icon">${icon}</span>
-      <span><b>${escapeHtml(search.query || 'Без названия')}</b><small>${escapeHtml(search.category || search.size || 'Поиск')}</small></span>
-      <em>${search.active === false ? 'Пауза' : 'Активен'}</em><i></i>
-    </button>
+      <span class="search-main"><b>${escapeHtml(search.query || 'Без названия')}</b><small>${escapeHtml([search.category, search.size].filter(Boolean).join(' • ') || 'Поиск')}</small></span>
+      <em>${search.active === false ? 'Пауза' : 'Активен'}</em>
+      <div class="search-actions">
+        <button type="button" class="mini-action edit-search" data-id="${search.id}">Изменить</button>
+        <button type="button" class="mini-action danger delete-search" data-id="${search.id}">Удалить</button>
+      </div>
+    </div>
   `).join('');
+
+  searchesList.querySelectorAll('.edit-search').forEach((button) => {
+    button.addEventListener('click', () => startEditSearch(button.dataset.id));
+  });
+  searchesList.querySelectorAll('.delete-search').forEach((button) => {
+    button.addEventListener('click', () => deleteSearch(button.dataset.id));
+  });
 }
 
 function escapeHtml(value) {
@@ -337,7 +349,77 @@ async function payByCard() {
   openAdminChat(selectedPlan);
 }
 
+function localSearches() {
+  return JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]');
+}
+
+function saveLocalSearches(list) {
+  localStorage.setItem('GOFISH_LOCAL_SEARCHES_V8', JSON.stringify(list));
+  renderSearches(list);
+}
+
+function fillSearchForm(search) {
+  document.getElementById('queryInput').value = search.query || '';
+  document.getElementById('minPriceInput').value = search.minPrice || '';
+  document.getElementById('maxPriceInput').value = search.maxPrice || '';
+  const category = document.getElementById('categorySelect');
+  category.value = search.category || '';
+  setSelectState(category);
+  document.getElementById('sizeInput').value = search.size || '';
+  document.getElementById('keywordsInput').value = search.keywords || '';
+}
+
+function startEditSearch(id) {
+  const search = searches.find((item) => item.id === id);
+  if (!search) return showToast('Поиск не найден.');
+  editingSearchId = id;
+  fillSearchForm(search);
+  const buttonText = document.querySelector('#searchForm .primary-btn span');
+  if (buttonText) buttonText.textContent = 'Сохранить изменения';
+  showScreen('home');
+  showToast('Редактирование поиска');
+  haptic('light');
+}
+
+async function deleteSearch(id) {
+  const search = searches.find((item) => item.id === id);
+  if (!search) return;
+  const ok = window.confirm(`Удалить поиск «${search.query || 'Без названия'}»?`);
+  if (!ok) return;
+
+  if (config.API_URL && tg?.initData && !String(id).startsWith('local_')) {
+    await apiFetch(`/api/searches/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    renderSearches(searches.filter((item) => item.id !== id));
+  } else {
+    saveLocalSearches(localSearches().filter((item) => item.id !== id));
+  }
+  showToast('Поиск удален.');
+  haptic('medium');
+}
+
 async function saveSearch(payload) {
+  if (editingSearchId) {
+    if (config.API_URL && tg?.initData && !String(editingSearchId).startsWith('local_')) {
+      const data = await apiFetch(`/api/searches/${encodeURIComponent(editingSearchId)}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      });
+      renderSearches([data.search, ...searches.filter((x) => x.id !== data.search.id)]);
+      editingSearchId = null;
+      return data.search;
+    }
+
+    const updated = localSearches().map((item) => (
+      item.id === editingSearchId
+        ? { ...item, ...payload, updatedAt: new Date().toISOString() }
+        : item
+    ));
+    const saved = updated.find((item) => item.id === editingSearchId);
+    editingSearchId = null;
+    saveLocalSearches(updated);
+    return saved;
+  }
+
   if (config.API_URL && tg?.initData) {
     const data = await apiFetch('/api/searches', {
       method: 'POST',
@@ -353,9 +435,8 @@ async function saveSearch(payload) {
     active: true,
     createdAt: new Date().toISOString(),
   };
-  const local = [search, ...JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]')];
-  localStorage.setItem('GOFISH_LOCAL_SEARCHES_V8', JSON.stringify(local));
-  renderSearches(local);
+  const local = [search, ...localSearches()];
+  saveLocalSearches(local);
   return search;
 }
 
@@ -375,8 +456,9 @@ document.getElementById('searchForm').addEventListener('submit', async (event) =
   button.classList.add('loading');
   button.querySelector('span').textContent = 'Сохраняю...';
   try {
+    const wasEditing = Boolean(editingSearchId);
     await saveSearch(payload);
-    showToast('Поиск запущен. Объявления придут в бот.');
+    showToast(wasEditing ? 'Поиск обновлен.' : 'Поиск запущен. Объявления придут в бот.');
     haptic('medium');
   } catch (err) {
     console.warn(err);
