@@ -26,6 +26,13 @@ const faq = [
 let selectedPlan = 'lifetime';
 let me = null;
 let searches = [];
+let selectedSizes = [];
+
+const sizePresets = {
+  'Обувь': ['35','36','37','38','39','40','41','42','43','44','45','46','47'],
+  'Одежда': ['XXS','XS','S','M','L','XL','XXL','3XL'],
+  'Аксессуары': ['S','M','L'],
+};
 
 const screens = document.querySelectorAll('.screen');
 const tabs = document.querySelectorAll('.tab');
@@ -119,9 +126,74 @@ function setSelectState(select) {
   select.classList.toggle('placeholder', !select.value);
 }
 
+function normalizeSize(value) {
+  return String(value || '').trim();
+}
+
+function syncSizeInput() {
+  const hidden = document.getElementById('sizeInput');
+  const custom = normalizeSize(document.getElementById('sizeCustomInput')?.value);
+  const values = [...selectedSizes];
+  if (custom && !values.includes(custom)) values.push(custom);
+  hidden.value = values.join(', ');
+}
+
+function renderSizeOptions() {
+  const category = document.getElementById('categorySelect')?.value || '';
+  const root = document.getElementById('sizeOptions');
+  const hint = document.getElementById('sizeHint');
+  if (!root || !hint) return;
+
+  const options = sizePresets[category] || [];
+  selectedSizes = selectedSizes.filter((value) => options.includes(value));
+
+  if (category === 'Обувь') {
+    hint.textContent = 'Можно выбрать несколько размеров обуви';
+  } else if (category === 'Одежда') {
+    hint.textContent = 'Можно выбрать несколько размеров одежды';
+  } else if (options.length) {
+    hint.textContent = 'Можно выбрать несколько размеров';
+  } else {
+    hint.textContent = 'Для этой категории размер можно ввести вручную';
+  }
+
+  root.innerHTML = options.length
+    ? options.map((size) => `<button class="size-chip ${selectedSizes.includes(size) ? 'selected' : ''}" type="button" data-size="${size}">${size}</button>`).join('')
+    : '<div class="size-empty">Размер не обязателен</div>';
+
+  root.querySelectorAll('.size-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const value = chip.dataset.size;
+      if (selectedSizes.includes(value)) {
+        selectedSizes = selectedSizes.filter((item) => item !== value);
+      } else {
+        selectedSizes.push(value);
+      }
+      renderSizeOptions();
+      syncSizeInput();
+      haptic('light');
+    });
+  });
+  syncSizeInput();
+}
+
 document.querySelectorAll('select').forEach((select) => {
-  select.addEventListener('change', () => setSelectState(select));
+  select.addEventListener('change', () => {
+    setSelectState(select);
+    if (select.id === 'categorySelect') renderSizeOptions();
+  });
   setSelectState(select);
+});
+
+document.getElementById('sizeCustomInput')?.addEventListener('input', syncSizeInput);
+
+document.getElementById('clearSizes')?.addEventListener('click', () => {
+  selectedSizes = [];
+  const custom = document.getElementById('sizeCustomInput');
+  if (custom) custom.value = '';
+  renderSizeOptions();
+  syncSizeInput();
+  haptic('light');
 });
 
 function displayNameFromTelegram(user) {
@@ -352,7 +424,7 @@ document.getElementById('searchForm').addEventListener('submit', async (event) =
     minPrice: document.getElementById('minPriceInput').value.trim(),
     maxPrice: document.getElementById('maxPriceInput').value.trim(),
     category: document.getElementById('categorySelect').value,
-    size: document.getElementById('sizeSelect').value,
+    size: document.getElementById('sizeInput').value,
     keywords: document.getElementById('keywordsInput').value.trim(),
   };
 
@@ -389,6 +461,7 @@ document.getElementById('openBotRow').addEventListener('click', () => {
 
 renderPlans();
 renderFAQ();
+renderSizeOptions();
 
 try {
   tg?.ready();

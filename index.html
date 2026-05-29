@@ -61,15 +61,16 @@
             <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5 12 14l5-4.5"/></svg>
           </label>
 
-          <label class="field select-field">
+          <div class="field size-field" id="sizeField">
             <span>Размер</span>
-            <select id="sizeSelect" name="size">
-              <option value="" selected>Укажите размер, если нужно</option>
-              <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
-              <option>36</option><option>37</option><option>38</option><option>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option>
-            </select>
-            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9.5 12 14l5-4.5"/></svg>
-          </label>
+            <div class="size-toolbar">
+              <small id="sizeHint">Выберите категорию, чтобы увидеть подходящие размеры</small>
+              <button class="size-clear" type="button" id="clearSizes">Очистить</button>
+            </div>
+            <div class="size-options" id="sizeOptions" aria-label="Размеры"></div>
+            <input id="sizeCustomInput" name="customSize" placeholder="Или введите размер вручную" autocomplete="off" />
+            <input id="sizeInput" name="size" type="hidden" />
+          </div>
 
           <label class="field field-full">
             <span>Ключевые слова</span>
