@@ -1,4 +1,6 @@
 const tg = window.Telegram?.WebApp || null;
+const GOFISH_APP_BUILD = 'GOFISH_SENDDATA_FIX_V3_2026_06_01';
+console.log('[webapp] build', GOFISH_APP_BUILD);
 const urlParams = new URLSearchParams(location.search);
 const config = {
   BOT_USERNAME: urlParams.get('bot') || window.GOFISH_CONFIG?.BOT_USERNAME || localStorage.getItem('GOFISH_BOT_USERNAME') || '',
@@ -250,21 +252,33 @@ function isTelegramWebApp() {
 }
 
 function sendToBot(payload, fallbackText = 'Откройте Mini App из Telegram-бота.') {
-  console.log('[webapp] sendData', payload);
+  console.log('[webapp] sendData payload', payload);
+  console.log('[webapp] Telegram object', {
+    hasTelegram: Boolean(window.Telegram),
+    hasWebApp: Boolean(window.Telegram?.WebApp),
+    hasSendData: typeof window.Telegram?.WebApp?.sendData,
+    initDataLength: window.Telegram?.WebApp?.initData?.length || 0,
+    platform: window.Telegram?.WebApp?.platform || 'unknown',
+    version: window.Telegram?.WebApp?.version || 'unknown',
+  });
 
-  if (tg && typeof tg.sendData === 'function') {
+  if (window.Telegram?.WebApp && typeof window.Telegram.WebApp.sendData === 'function') {
     try {
-      tg.sendData(JSON.stringify(payload));
+      window.Telegram.WebApp.sendData(JSON.stringify(payload));
       haptic('medium');
+      // sendData должен передать данные боту. Закрываем Mini App только после вызова.
       setTimeout(() => {
-        try { tg.close(); } catch {}
-      }, 180);
+        try { window.Telegram.WebApp.close(); } catch (error) { console.warn('[webapp] close failed', error); }
+      }, 250);
       return true;
     } catch (error) {
       console.error('[webapp] sendData failed', error);
+      showToast('Telegram не принял данные. Откройте приложение через кнопку Open App в чате бота.');
+      return false;
     }
   }
 
+  // Важно: если приложение открыто не как Telegram WebApp, в бота ничего отправить нельзя.
   console.warn('[webapp] Telegram.WebApp.sendData is not available');
   console.log('[webapp] fallback payload', payload);
   showToast(fallbackText);
@@ -327,6 +341,7 @@ function contactAdmin() {
 document.getElementById('searchForm').addEventListener('submit', (event) => {
   event.preventDefault();
   const button = event.currentTarget.querySelector('.primary-btn');
+  const buttonText = button.querySelector('span');
   const search = {
     query: document.getElementById('queryInput').value.trim(),
     minPrice: document.getElementById('minPriceInput').value.trim(),
@@ -335,6 +350,9 @@ document.getElementById('searchForm').addEventListener('submit', (event) => {
     size: document.getElementById('sizeInput').value.trim(),
     keywords: document.getElementById('keywordsInput').value.trim(),
   };
+
+  if (!search.query) return showToast('Введите, что ищем.');
+
   const payload = {
     action: editingSearchId ? 'edit_search' : 'create_search',
     searchId: editingSearchId || undefined,
@@ -342,21 +360,32 @@ document.getElementById('searchForm').addEventListener('submit', (event) => {
     ...search,
   };
 
-  if (!search.query) return showToast('Введите, что ищем.');
   button.classList.add('loading');
-  button.querySelector('span').textContent = 'Отправляю в бот...';
+  if (buttonText) buttonText.textContent = 'Отправляю в бот...';
   haptic('medium');
-  const sent = sendToBot(payload, 'Откройте Mini App из кнопки Open App в Telegram-боте. В браузере это только предпросмотр.');
-  if (!sent) {
-    // Local preview only for Safari/Chrome/dev mode. In Telegram mode the source of truth is bot-api/data/db.json.
+
+  const sent = sendToBot(payload, 'Откройте Mini App через кнопку Open App в Telegram-боте. В браузере это только предпросмотр.');
+
+  if (sent) {
+    // Не рисуем поиск локально и не переходим в профиль. Источник правды — bot-api/data/db.json.
+    // После успешного sendData Telegram должен закрыть Mini App, а бот пришлет подтверждение в чат.
+    setTimeout(() => {
+      button.classList.remove('loading');
+      if (buttonText) buttonText.textContent = editingSearchId ? 'Сохранить изменения' : 'Сохранить и запустить';
+    }, 2000);
+    return;
+  }
+
+  // Dev/browser preview only. В реальном Telegram, если sendData недоступен, надо открыть приложение заново из бота.
+  if (!window.Telegram?.WebApp) {
     const local = { id: editingSearchId || `local_${Date.now()}`, ...search, active: true };
     if (editingSearchId) renderSearches(searches.map((s) => String(s.id) === String(editingSearchId) ? local : s));
     else renderSearches([local, ...searches]);
     resetSearchForm();
-    button.classList.remove('loading');
-    const buttonText = button.querySelector('span');
-    if (buttonText) buttonText.textContent = 'Сохранить и запустить';
   }
+
+  button.classList.remove('loading');
+  if (buttonText) buttonText.textContent = editingSearchId ? 'Сохранить изменения' : 'Сохранить и запустить';
 });
 
 document.getElementById('payStarsBtn').addEventListener('click', payByStars);
