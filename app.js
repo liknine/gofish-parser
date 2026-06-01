@@ -1,5 +1,5 @@
 const tg = window.Telegram?.WebApp || null;
-const GOFISH_APP_BUILD = 'GOFISH_SENDDATA_FIX_V3_2026_06_01';
+const GOFISH_APP_BUILD = 'GOFISH_SENDDATA_FIX_V4_PROFILE_REFRESH_2026_06_01';
 console.log('[webapp] build', GOFISH_APP_BUILD);
 const urlParams = new URLSearchParams(location.search);
 const config = {
