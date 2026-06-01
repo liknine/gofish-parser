@@ -1,10 +1,9 @@
 const tg = window.Telegram?.WebApp || null;
 const urlParams = new URLSearchParams(location.search);
 const config = {
-  API_URL: urlParams.get('api') || window.GOFISH_CONFIG?.API_URL || localStorage.getItem('GOFISH_API_URL') || '',
   BOT_USERNAME: urlParams.get('bot') || window.GOFISH_CONFIG?.BOT_USERNAME || localStorage.getItem('GOFISH_BOT_USERNAME') || '',
   ADMIN_USERNAME: window.GOFISH_CONFIG?.ADMIN_USERNAME || 'taypoov',
-  ADMIN_TEXT: window.GOFISH_CONFIG?.ADMIN_TEXT || 'Есть вопрос по боту. Хочу оплатить подписку на карту.',
+  ADMIN_TEXT: window.GOFISH_CONFIG?.ADMIN_TEXT || 'Есть вопрос по боту.',
 };
 
 const plans = [
@@ -16,15 +15,14 @@ const plans = [
 ];
 
 const faq = [
-  ['Куда приходят объявления?', 'Все новые объявления приходят прямо в чат Telegram-бота. Mini App нужен только для настройки поиска и управления подпиской.'],
-  ['Как купить подписку?', 'Во вкладке «Тарифы» выберите период и оплатите Telegram Stars. Для оплаты картой нажмите «Оплатить на карту» — откроется личка админа.'],
-  ['Как остановить поиск?', 'В профиле откройте активный поиск и отключите его. На MVP-этапе можно также написать админу, если нужно удалить поиск вручную.'],
-  ['Что делать, если бот молчит?', 'Проверьте активна ли подписка и корректно ли настроен поиск. Если подписка активна, но объявлений нет, возможно, по фильтрам пока нет новых товаров.'],
-  ['Как связаться с админом?', 'Нажмите «Написать админу». Telegram откроет диалог с @taypoov и попробует сразу подставить текст сообщения.'],
+  ['Куда приходят объявления?', 'Все новые объявления приходят прямо в чат Telegram-бота. Mini App нужен только для настройки поиска, подписки и активных фильтров.'],
+  ['Как купить подписку?', 'Во вкладке «Тарифы» выберите тариф. Можно оплатить через Telegram Stars в боте или написать админу для оплаты на карту.'],
+  ['Как остановить поиск?', 'Откройте «Профиль», найдите активный поиск и нажмите «Удалить». Если нужно временно поставить поиск на паузу — напишите админу, пока мы не добавили отдельную кнопку паузы.'],
+  ['Что делать, если бот молчит?', 'Проверьте, активна ли подписка, корректно ли заполнен поиск и не слишком ли узкие фильтры. Если всё верно, возможно, новых объявлений пока нет.'],
+  ['Как связаться с админом?', 'Нажмите кнопку «Написать админу». Telegram откроет диалог с @taypoov с готовым текстом вопроса.'],
 ];
 
-let selectedPlan = 'lifetime';
-let me = null;
+let selectedPlan = 'week';
 let searches = [];
 let editingSearchId = null;
 
@@ -39,7 +37,7 @@ function showToast(text) {
   toast.textContent = text;
   toast.classList.add('show');
   clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2600);
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400);
 }
 
 function haptic(type = 'light') {
@@ -49,18 +47,8 @@ function haptic(type = 'light') {
 function showScreen(name) {
   const current = document.querySelector('.screen.active')?.dataset.screen;
   if (current === name) return;
-
-  screens.forEach((screen) => {
-    const active = screen.dataset.screen === name;
-    screen.classList.toggle('active', active);
-  });
-
+  screens.forEach((screen) => screen.classList.toggle('active', screen.dataset.screen === name));
   tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.tab === name));
-  const order = ['home', 'plans', 'profile', 'faq'];
-  const index = Math.max(0, order.indexOf(name));
-  const dock = document.querySelector('.dock');
-  dock?.style.setProperty('--dock-index', String(index));
-  dock?.style.setProperty('--dock-shift', `${index * 100}%`);
   haptic('soft');
 }
 
@@ -120,35 +108,39 @@ function setSelectState(select) {
   select.classList.toggle('placeholder', !select.value);
 }
 
-function normalizeSize(value) {
-  return String(value || '').trim();
-}
-
-function syncSizeInput() {
-  // Размер теперь обычное текстовое поле.
-}
-
-function renderSizeOptions() {
-  // Размер теперь обычное текстовое поле.
-}
-
 document.querySelectorAll('select').forEach((select) => {
-  select.addEventListener('change', () => {
-    setSelectState(select);
-    if (select.id === 'categorySelect') renderSizeOptions();
-  });
+  select.addEventListener('change', () => setSelectState(select));
   setSelectState(select);
 });
 
-function displayNameFromTelegram(user) {
-  if (!user) return '@username';
-  if (user.username) return `@${user.username}`;
-  const name = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
-  return name || '@username';
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>\"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+}
+
+function safeJsonParam(name, fallback) {
+  const raw = urlParams.get(name);
+  if (!raw) return fallback;
+  try { return JSON.parse(raw); } catch { return fallback; }
 }
 
 function getTelegramUser() {
   return tg?.initDataUnsafe?.user || null;
+}
+
+function userFromUrl() {
+  const id = urlParams.get('uid') || '';
+  const username = urlParams.get('username') || '';
+  const first_name = urlParams.get('first_name') || '';
+  const photo_url = urlParams.get('photo_url') || '';
+  if (!id && !username && !first_name && !photo_url) return null;
+  return { id, username, first_name, photo_url };
+}
+
+function displayNameFromTelegram(user) {
+  if (!user) return '@username';
+  if (user.username) return `@${user.username}`;
+  const name = [user.first_name, user.firstName, user.last_name, user.lastName].filter(Boolean).join(' ').trim();
+  return name || '@username';
 }
 
 function subscriptionTextFromUrl() {
@@ -164,20 +156,12 @@ function subscriptionTextFromUrl() {
   const status = urlParams.get('sub');
   if (status === 'active') return 'Подписка активна';
   if (status === 'inactive') return 'Подписка не активна';
-  return '';
+  return 'Статус можно проверить в боте';
 }
 
 function isActiveSubscriptionText(text = '') {
   const value = String(text).toLowerCase();
   return value.includes('активна') && !value.includes('не активна') && !value.includes('проверить') && !value.includes('предпросмотр');
-}
-
-function userFromUrl() {
-  const id = urlParams.get('uid') || '';
-  const username = urlParams.get('username') || '';
-  const first_name = urlParams.get('first_name') || '';
-  if (!id && !username && !first_name) return null;
-  return { id, username, first_name };
 }
 
 function applyUser(user, subscriptionText = 'Подписка не активна') {
@@ -192,10 +176,18 @@ function applyUser(user, subscriptionText = 'Подписка не активн�
   profileStatus.classList.toggle('is-active', isActiveSubscriptionText(subscriptionText));
   profileStatus.classList.toggle('is-inactive', !isActiveSubscriptionText(subscriptionText));
 
-  if (user?.photo_url || user?.photoUrl) {
-    const src = user.photo_url || user.photoUrl;
-    avatar.innerHTML = `<img src="${src}" alt="avatar" referrerpolicy="no-referrer" />`;
-  }
+  const photo = user?.photo_url || user?.photoUrl;
+  if (photo) avatar.innerHTML = `<img src="${escapeHtml(photo)}" alt="avatar" referrerpolicy="no-referrer" />`;
+}
+
+function loadInitialState() {
+  const tgUser = getTelegramUser();
+  const urlUser = userFromUrl();
+  const initialUser = tgUser || urlUser || { id: '—', username: 'username' };
+  applyUser(initialUser, subscriptionTextFromUrl());
+  searches = safeJsonParam('searches', []);
+  if (!Array.isArray(searches)) searches = [];
+  renderSearches(searches);
 }
 
 function renderSearches(list) {
@@ -207,155 +199,19 @@ function renderSearches(list) {
 
   const icon = '<svg viewBox="0 0 24 24"><path d="M9 2.8h6a2 2 0 0 1 2 2v14.4a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2Z"/></svg>';
   searchesList.innerHTML = searches.map((search) => `
-    <div class="search-row" data-search-id="${search.id}">
+    <div class="search-row" data-search-id="${escapeHtml(search.id)}">
       <span class="round-icon">${icon}</span>
       <span class="search-main"><b>${escapeHtml(search.query || 'Без названия')}</b><small>${escapeHtml([search.category, search.size].filter(Boolean).join(' • ') || 'Поиск')}</small></span>
       <em>${search.active === false ? 'Пауза' : 'Активен'}</em>
       <div class="search-actions">
-        <button type="button" class="mini-action edit-search" data-id="${search.id}">Изменить</button>
-        <button type="button" class="mini-action danger delete-search" data-id="${search.id}">Удалить</button>
+        <button type="button" class="mini-action edit-search" data-id="${escapeHtml(search.id)}">Изменить</button>
+        <button type="button" class="mini-action danger delete-search" data-id="${escapeHtml(search.id)}">Удалить</button>
       </div>
     </div>
   `).join('');
 
-  searchesList.querySelectorAll('.edit-search').forEach((button) => {
-    button.addEventListener('click', () => startEditSearch(button.dataset.id));
-  });
-  searchesList.querySelectorAll('.delete-search').forEach((button) => {
-    button.addEventListener('click', () => deleteSearch(button.dataset.id));
-  });
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
-}
-
-function apiUrl(path) {
-  if (!config.API_URL) return '';
-  return `${config.API_URL.replace(/\/$/, '')}${path}`;
-}
-
-async function apiFetch(path, options = {}) {
-  const url = apiUrl(path);
-  if (!url) throw new Error('API_URL_EMPTY');
-  const initData = tg?.initData || '';
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(initData ? { 'x-telegram-init-data': initData } : { 'x-dev-telegram-id': '123456789' }),
-    ...(options.headers || {}),
-  };
-  const response = await fetch(url, { ...options, headers });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.ok === false) throw new Error(data.error || 'REQUEST_FAILED');
-  return data;
-}
-
-async function loadMe() {
-  const tgUser = getTelegramUser();
-  const urlUser = userFromUrl();
-  const initialUser = tgUser || urlUser || { id: '—', username: 'username' };
-  const urlSubscription = subscriptionTextFromUrl();
-  applyUser(initialUser, urlSubscription || (tgUser ? 'Статус подписки загружается...' : 'Локальный предпросмотр'));
-
-  if (!config.API_URL) {
-    const local = JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]');
-    applyUser(initialUser, urlSubscription || 'Статус можно проверить в боте через /status');
-    renderSearches(local);
-    return;
-  }
-
-  try {
-    const data = await apiFetch('/api/me');
-    me = data.user;
-    applyUser({ ...tgUser, ...data.user, id: data.user.telegramId, photo_url: tgUser?.photo_url || data.user.photoUrl }, `Подписка ${data.subscription?.text || 'не активна'}`);
-    if (data.plans) mergePlanStars(data.plans);
-    if (data.config?.botUsername && !config.BOT_USERNAME) config.BOT_USERNAME = data.config.botUsername;
-    renderPlans();
-    renderSearches(data.searches || []);
-  } catch (err) {
-    console.warn(err);
-    applyUser(tgUser || urlUser || me || { id: '—', username: 'username' }, urlSubscription || 'Статус можно проверить в боте через /status');
-    showToast('API недоступен. Статус взят из кнопки бота.');
-  }
-}
-
-function mergePlanStars(serverPlans) {
-  const map = { week: 'week', month: 'month', three_months: 'three_months', year: 'year', lifetime: 'lifetime' };
-  plans.forEach((local) => {
-    const server = serverPlans[map[local.key]];
-    if (server) {
-      local.stars = server.stars;
-      local.usd = server.usd;
-    }
-  });
-}
-
-function openTelegram(url) {
-  if (tg?.openTelegramLink) tg.openTelegramLink(url);
-  else window.open(url, '_blank', 'noopener,noreferrer');
-}
-
-function botLink(start = '') {
-  if (!config.BOT_USERNAME) return '';
-  const suffix = start ? `?start=${encodeURIComponent(start)}` : '';
-  return `https://t.me/${config.BOT_USERNAME}${suffix}`;
-}
-
-async function copyText(text) {
-  try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
-}
-
-function adminMessage(planKey = '') {
-  const plan = plans.find((item) => item.key === planKey);
-  return plan
-    ? `Есть вопрос по боту. Хочу оплатить тариф ${plan.title} на карту.`
-    : 'Есть вопрос по боту.';
-}
-
-function openAdminChat(planKey = '') {
-  const text = adminMessage(planKey);
-  const tgUrl = `tg://resolve?domain=${config.ADMIN_USERNAME}&text=${encodeURIComponent(text)}`;
-  const webUrl = `https://t.me/${config.ADMIN_USERNAME}?text=${encodeURIComponent(text)}`;
-
-  haptic('medium');
-  // В Telegram/iOS deep-link обычно открывает диалог и подставляет текст.
-  // Если клиент не поддержит параметр text, просто откроется чат с админом.
-  try { window.location.href = tgUrl; } catch {}
-  setTimeout(() => {
-    if (document.visibilityState === 'visible') openTelegram(webUrl);
-  }, 650);
-}
-
-async function contactAdmin() {
-  openAdminChat();
-}
-
-async function payByStars() {
-  haptic('medium');
-  const plan = plans.find((item) => item.key === selectedPlan);
-  if (!plan) return showToast('Выберите тариф.');
-
-  // ВАЖНО: Mini App не создает invoice сам.
-  // Кнопка всегда перекидывает в бота с выбранным тарифом,
-  // а уже бот показывает меню оплаты и отправляет Stars invoice.
-  const link = botLink(`buy_${selectedPlan}`);
-  if (link) return openTelegram(link);
-
-  await copyText(`/start buy_${selectedPlan}`);
-  showToast('Команда покупки скопирована. Откройте бота.');
-}
-
-async function payByCard() {
-  openAdminChat(selectedPlan);
-}
-
-function localSearches() {
-  return JSON.parse(localStorage.getItem('GOFISH_LOCAL_SEARCHES_V8') || '[]');
-}
-
-function saveLocalSearches(list) {
-  localStorage.setItem('GOFISH_LOCAL_SEARCHES_V8', JSON.stringify(list));
-  renderSearches(list);
+  searchesList.querySelectorAll('.edit-search').forEach((button) => button.addEventListener('click', () => startEditSearch(button.dataset.id)));
+  searchesList.querySelectorAll('.delete-search').forEach((button) => button.addEventListener('click', () => deleteSearch(button.dataset.id)));
 }
 
 function fillSearchForm(search) {
@@ -369,8 +225,16 @@ function fillSearchForm(search) {
   document.getElementById('keywordsInput').value = search.keywords || '';
 }
 
+function resetSearchForm() {
+  document.getElementById('searchForm').reset();
+  document.querySelectorAll('select').forEach(setSelectState);
+  const buttonText = document.querySelector('#searchForm .primary-btn span');
+  if (buttonText) buttonText.textContent = 'Сохранить и запустить';
+  editingSearchId = null;
+}
+
 function startEditSearch(id) {
-  const search = searches.find((item) => item.id === id);
+  const search = searches.find((item) => String(item.id) === String(id));
   if (!search) return showToast('Поиск не найден.');
   editingSearchId = id;
   fillSearchForm(search);
@@ -381,108 +245,131 @@ function startEditSearch(id) {
   haptic('light');
 }
 
-async function deleteSearch(id) {
-  const search = searches.find((item) => item.id === id);
+function isTelegramWebApp() {
+  return Boolean(window.Telegram && window.Telegram.WebApp);
+}
+
+function sendToBot(payload, fallbackText = 'Откройте Mini App из Telegram-бота.') {
+  console.log('[webapp] sendData', payload);
+
+  if (tg && typeof tg.sendData === 'function') {
+    try {
+      tg.sendData(JSON.stringify(payload));
+      haptic('medium');
+      setTimeout(() => {
+        try { tg.close(); } catch {}
+      }, 180);
+      return true;
+    } catch (error) {
+      console.error('[webapp] sendData failed', error);
+    }
+  }
+
+  console.warn('[webapp] Telegram.WebApp.sendData is not available');
+  console.log('[webapp] fallback payload', payload);
+  showToast(fallbackText);
+  return false;
+}
+
+function deleteSearch(id) {
+  const search = searches.find((item) => String(item.id) === String(id));
   if (!search) return;
   const ok = window.confirm(`Удалить поиск «${search.query || 'Без названия'}»?`);
   if (!ok) return;
-
-  if (config.API_URL && tg?.initData && !String(id).startsWith('local_')) {
-    await apiFetch(`/api/searches/${encodeURIComponent(id)}`, { method: 'DELETE' });
-    renderSearches(searches.filter((item) => item.id !== id));
-  } else {
-    saveLocalSearches(localSearches().filter((item) => item.id !== id));
-  }
-  showToast('Поиск удален.');
   haptic('medium');
+  sendToBot({ action: 'delete_search', searchId: id }, 'В Telegram поиск будет удален через бота.');
 }
 
-async function saveSearch(payload) {
-  if (editingSearchId) {
-    if (config.API_URL && tg?.initData && !String(editingSearchId).startsWith('local_')) {
-      const data = await apiFetch(`/api/searches/${encodeURIComponent(editingSearchId)}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      });
-      renderSearches([data.search, ...searches.filter((x) => x.id !== data.search.id)]);
-      editingSearchId = null;
-      return data.search;
-    }
-
-    const updated = localSearches().map((item) => (
-      item.id === editingSearchId
-        ? { ...item, ...payload, updatedAt: new Date().toISOString() }
-        : item
-    ));
-    const saved = updated.find((item) => item.id === editingSearchId);
-    editingSearchId = null;
-    saveLocalSearches(updated);
-    return saved;
-  }
-
-  if (config.API_URL && tg?.initData) {
-    const data = await apiFetch('/api/searches', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    renderSearches([data.search, ...searches.filter((x) => x.id !== data.search.id)]);
-    return data.search;
-  }
-
-  const search = {
-    id: `local_${Date.now()}`,
-    ...payload,
-    active: true,
-    createdAt: new Date().toISOString(),
-  };
-  const local = [search, ...localSearches()];
-  saveLocalSearches(local);
-  return search;
+function openTelegram(url) {
+  if (tg?.openTelegramLink) tg.openTelegramLink(url);
+  else window.open(url, '_blank', 'noopener,noreferrer');
 }
 
-document.getElementById('searchForm').addEventListener('submit', async (event) => {
+function botLink(start = '') {
+  if (!config.BOT_USERNAME) return '';
+  const suffix = start ? `?start=${encodeURIComponent(start)}` : '';
+  return `https://t.me/${config.BOT_USERNAME}${suffix}`;
+}
+
+function adminMessage(planKey = '') {
+  const plan = plans.find((item) => item.key === planKey);
+  return plan
+    ? `Есть вопрос по боту. Хочу оплатить тариф ${plan.title} на карту.`
+    : 'Есть вопрос по боту.';
+}
+
+function openAdminChat(planKey = '') {
+  const text = adminMessage(planKey);
+  const tgUrl = `tg://resolve?domain=${config.ADMIN_USERNAME}&text=${encodeURIComponent(text)}`;
+  const webUrl = `https://t.me/${config.ADMIN_USERNAME}?text=${encodeURIComponent(text)}`;
+  haptic('medium');
+  try { window.location.href = tgUrl; } catch {}
+  setTimeout(() => {
+    if (document.visibilityState === 'visible') openTelegram(webUrl);
+  }, 450);
+}
+
+function payByStars() {
+  haptic('medium');
+  const link = botLink(`buy_${selectedPlan}`);
+  if (link) return openTelegram(link);
+  showToast('Откройте приложение из бота для оплаты Stars.');
+}
+
+function payByCard() {
+  openAdminChat(selectedPlan);
+}
+
+function contactAdmin() {
+  openAdminChat();
+}
+
+document.getElementById('searchForm').addEventListener('submit', (event) => {
   event.preventDefault();
   const button = event.currentTarget.querySelector('.primary-btn');
-  const payload = {
+  const search = {
     query: document.getElementById('queryInput').value.trim(),
     minPrice: document.getElementById('minPriceInput').value.trim(),
     maxPrice: document.getElementById('maxPriceInput').value.trim(),
     category: document.getElementById('categorySelect').value,
-    size: document.getElementById('sizeInput').value,
+    size: document.getElementById('sizeInput').value.trim(),
     keywords: document.getElementById('keywordsInput').value.trim(),
   };
+  const payload = {
+    action: editingSearchId ? 'edit_search' : 'create_search',
+    searchId: editingSearchId || undefined,
+    search,
+    ...search,
+  };
 
-  if (!payload.query) return showToast('Введите, что ищем.');
+  if (!search.query) return showToast('Введите, что ищем.');
   button.classList.add('loading');
-  button.querySelector('span').textContent = 'Сохраняю...';
-  try {
-    const wasEditing = Boolean(editingSearchId);
-    await saveSearch(payload);
-    showToast(wasEditing ? 'Поиск обновлен.' : 'Поиск запущен. Объявления придут в бот.');
-    haptic('medium');
-  } catch (err) {
-    console.warn(err);
-    if (err.message === 'NO_ACTIVE_SUBSCRIPTION') {
-      showScreen('plans');
-      showToast('Нужна активная подписка.');
-    } else {
-      showToast('Не удалось сохранить поиск. Проверьте API.');
-    }
-  } finally {
+  button.querySelector('span').textContent = 'Отправляю в бот...';
+  haptic('medium');
+  const sent = sendToBot(payload, 'Откройте Mini App из кнопки Open App в Telegram-боте. В браузере это только предпросмотр.');
+  if (!sent) {
+    // Local preview only for Safari/Chrome/dev mode. In Telegram mode the source of truth is bot-api/data/db.json.
+    const local = { id: editingSearchId || `local_${Date.now()}`, ...search, active: true };
+    if (editingSearchId) renderSearches(searches.map((s) => String(s.id) === String(editingSearchId) ? local : s));
+    else renderSearches([local, ...searches]);
+    resetSearchForm();
     button.classList.remove('loading');
-    button.querySelector('span').textContent = 'Сохранить и запустить';
+    const buttonText = button.querySelector('span');
+    if (buttonText) buttonText.textContent = 'Сохранить и запустить';
   }
 });
 
 document.getElementById('payStarsBtn').addEventListener('click', payByStars);
 document.getElementById('payCardBtn').addEventListener('click', payByCard);
 document.getElementById('contactAdminBtn').addEventListener('click', contactAdmin);
-document.getElementById('checkStatusBtn').addEventListener('click', loadMe);
+document.getElementById('checkStatusBtn').addEventListener('click', () => {
+  showScreen('profile');
+  showToast('Статус обновляется при открытии через кнопку бота.');
+});
 document.getElementById('openBotRow').addEventListener('click', contactAdmin);
 
 renderPlans();
 renderFAQ();
-renderSizeOptions();
 
 try {
   tg?.ready();
@@ -491,4 +378,4 @@ try {
   tg?.setBackgroundColor?.('#ffffff');
 } catch {}
 
-loadMe();
+loadInitialState();

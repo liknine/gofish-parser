@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#ffffff" />
   <title>Goofish Sniper</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=15" />
   <script>
     window.GOFISH_CONFIG = {
-      // API_URL можно оставить пустым, если backend еще не выложен.
-      API_URL: '',
+      // Mini App работает через Telegram.WebApp.sendData, публичный API не нужен для сохранения поисков.
       // Впиши username бота без @, если открываешь Mini App напрямую с GitHub Pages.
       // Когда Mini App открывается из бота, bot-api сам добавит ?bot=... к ссылке.
       BOT_USERNAME: '',
@@ -150,6 +149,6 @@
 
     <div class="toast" id="toast">Готово</div>
   </div>
-  <script src="./app.js"></script>
+  <script src="./app.js?v=15"></script>
 </body>
 </html>
