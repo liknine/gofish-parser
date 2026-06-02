@@ -1,11 +1,12 @@
 const tg = window.Telegram?.WebApp || null;
-const GOFISH_APP_BUILD = 'GOFISH_SENDDATA_FIX_V4_PROFILE_REFRESH_2026_06_01';
+const GOFISH_APP_BUILD = 'GOFISH_V8_SEARCH_LIMIT_2026_06_02';
 console.log('[webapp] build', GOFISH_APP_BUILD);
 const urlParams = new URLSearchParams(location.search);
 const config = {
   BOT_USERNAME: urlParams.get('bot') || window.GOFISH_CONFIG?.BOT_USERNAME || localStorage.getItem('GOFISH_BOT_USERNAME') || '',
   ADMIN_USERNAME: window.GOFISH_CONFIG?.ADMIN_USERNAME || 'taypoov',
   ADMIN_TEXT: window.GOFISH_CONFIG?.ADMIN_TEXT || 'Есть вопрос по боту.',
+  MAX_ACTIVE_SEARCHES: Number(urlParams.get('max_searches') || window.GOFISH_CONFIG?.MAX_ACTIVE_SEARCHES || 3),
 };
 
 const plans = [
@@ -34,6 +35,26 @@ const toast = document.getElementById('toast');
 const plansRoot = document.getElementById('plans');
 const faqRoot = document.getElementById('faqList');
 const searchesList = document.getElementById('searchesList');
+
+function maxActiveSearches() {
+  const value = Number(config.MAX_ACTIVE_SEARCHES || 3);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 3;
+}
+
+function activeSearchCount() {
+  return searches.filter((item) => item && item.active !== false).length;
+}
+
+function updateSearchLimitUi() {
+  const max = maxActiveSearches();
+  const count = activeSearchCount();
+  const text = document.getElementById('searchLimitText');
+  const card = document.getElementById('searchLimitCard');
+  const saveBtn = document.getElementById('saveSearchBtn');
+  if (text) text.textContent = `Активных поисков: ${count}/${max}`;
+  if (card) card.classList.toggle('is-full', count >= max);
+  if (saveBtn) saveBtn.classList.toggle('limit-reached', count >= max && !editingSearchId);
+}
 
 function showToast(text) {
   toast.textContent = text;
@@ -196,6 +217,7 @@ function renderSearches(list) {
   searches = Array.isArray(list) ? list : [];
   if (!searches.length) {
     searchesList.innerHTML = '<div class="empty-state">Активных поисков пока нет. Настройте первый поиск на главной.</div>';
+    updateSearchLimitUi();
     return;
   }
 
@@ -214,6 +236,7 @@ function renderSearches(list) {
 
   searchesList.querySelectorAll('.edit-search').forEach((button) => button.addEventListener('click', () => startEditSearch(button.dataset.id)));
   searchesList.querySelectorAll('.delete-search').forEach((button) => button.addEventListener('click', () => deleteSearch(button.dataset.id)));
+  updateSearchLimitUi();
 }
 
 function fillSearchForm(search) {
@@ -233,12 +256,14 @@ function resetSearchForm() {
   const buttonText = document.querySelector('#searchForm .primary-btn span');
   if (buttonText) buttonText.textContent = 'Сохранить и запустить';
   editingSearchId = null;
+  updateSearchLimitUi();
 }
 
 function startEditSearch(id) {
   const search = searches.find((item) => String(item.id) === String(id));
   if (!search) return showToast('Поиск не найден.');
   editingSearchId = id;
+  updateSearchLimitUi();
   fillSearchForm(search);
   const buttonText = document.querySelector('#searchForm .primary-btn span');
   if (buttonText) buttonText.textContent = 'Сохранить изменения';
@@ -352,6 +377,12 @@ document.getElementById('searchForm').addEventListener('submit', (event) => {
   };
 
   if (!search.query) return showToast('Введите, что ищем.');
+
+  const max = maxActiveSearches();
+  if (!editingSearchId && activeSearchCount() >= max) {
+    haptic('light');
+    return showToast(`У вас уже ${max} активных поиска. Удалите один поиск в профиле, чтобы добавить новый.`);
+  }
 
   const payload = {
     action: editingSearchId ? 'edit_search' : 'create_search',

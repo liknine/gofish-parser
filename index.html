@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#ffffff" />
   <title>Goofish Sniper</title>
-  <link rel="stylesheet" href="./styles.css?v=17" />
+  <link rel="stylesheet" href="./styles.css?v=18" />
   <script>
     window.GOFISH_CONFIG = {
       // Mini App работает через Telegram.WebApp.sendData, публичный API не нужен для сохранения поисков.
@@ -32,7 +32,7 @@
         <form class="form" id="searchForm">
           <label class="field field-full active-field">
             <span>Что ищем</span>
-            <input id="queryInput" name="query" placeholder="Например: iPhone 15 Pro 256GB" autocomplete="off" />
+            <input id="queryInput" name="query" placeholder="Например: mcm backpack" autocomplete="off" />
           </label>
 
           <div class="field-grid">
@@ -70,7 +70,14 @@
             <input id="keywordsInput" name="keywords" placeholder="Введите через запятую" autocomplete="off" />
           </label>
 
-          <button class="primary-btn" type="submit">
+          <div class="search-limit-card" id="searchLimitCard">
+            <div>
+              <strong id="searchLimitText">Активных поисков: 0/3</strong>
+              <span>Можно запустить до 3 активных поисков одновременно.</span>
+            </div>
+          </div>
+
+          <button class="primary-btn" type="submit" id="saveSearchBtn">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 10-13h-7l0-7Z"/></svg>
             <span>Сохранить и запустить</span>
           </button>
@@ -149,6 +156,6 @@
 
     <div class="toast" id="toast">Готово</div>
   </div>
-  <script src="./app.js?v=17"></script>
+  <script src="./app.js?v=18"></script>
 </body>
 </html>
